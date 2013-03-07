@@ -1,4 +1,3 @@
-# YOU NEED TO EDIT THESE
 AUTHOR = 'Chris Dent'
 AUTHOR_EMAIL = 'cdent@peermore.com'
 NAME = 'tiddlywebplugins.migrate'
