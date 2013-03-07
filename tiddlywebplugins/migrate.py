@@ -40,24 +40,36 @@ from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.store import Store
 
-@make_command()
-def migrate(args):
-    """Migrate the content in current store to one described in target_store in config."""
-    source_environ = {'tiddlyweb.config': config}
-    target_environ = copy.deepcopy(source_environ)
-    target_environ['tiddlyweb.config']['server_store'] = config['target_store']
-    source_store = Store(config['server_store'][0], config['server_store'][1], source_environ)
-    target_store = Store(config['target_store'][0], config['target_store'][1], target_environ)
 
-    if args:
-        migrate_bags(source_store, target_store, bags=args)
-    else:
-        migrate_users(source_store, target_store)
-        migrate_recipes(source_store, target_store)
-        migrate_bags(source_store, target_store)
+def init(config):
+    """
+    Initialize the plugin, establishing the migrate command.
+    """
+
+    @make_command()
+    def migrate(args):
+        """Migrate the content in current store to one described in target_store in config."""
+        source_environ = {'tiddlyweb.config': config}
+        target_environ = copy.deepcopy(source_environ)
+        target_environ['tiddlyweb.config']['server_store'] = config[
+                'target_store']
+        source_store = Store(config['server_store'][0],
+                config['server_store'][1], source_environ)
+        target_store = Store(config['target_store'][0],
+                config['target_store'][1], target_environ)
+
+        if args:
+            migrate_bags(source_store, target_store, bags=args)
+        else:
+            migrate_users(source_store, target_store)
+            migrate_recipes(source_store, target_store)
+            migrate_bags(source_store, target_store)
 
 
 def migrate_recipes(source, target):
+    """
+    Migrate all the recipes.
+    """
     print "migrate recipes"
     for recipe in source.list_recipes():
         recipe = source.get(recipe)
@@ -66,6 +78,9 @@ def migrate_recipes(source, target):
 
 
 def migrate_users(source, target):
+    """
+    Migrate all the users.
+    """
     print "migrate users"
     for user in source.list_users():
         user = source.get(user)
@@ -74,6 +89,11 @@ def migrate_users(source, target):
 
 
 def migrate_bags(source, target, bags=None):
+    """
+    Migrate all the bags unless the bags are is set. If it is
+    then it is assumed to be a list of bags to migrate. Useful
+    for migrating just one bag.
+    """
     print "migrate bags"
     if bags:
         bags = [Bag(bag) for bag in bags]
@@ -88,15 +108,14 @@ def migrate_bags(source, target, bags=None):
             tiddlers = source.list_bag_tiddlers(bag)
         target.put(bag)
         for tiddler in tiddlers:
-            for revision_id in reversed(source.list_tiddler_revisions(tiddler)):
+            for revision_id in reversed(
+                    source.list_tiddler_revisions(tiddler)):
                 tiddler_revision = Tiddler(tiddler.title, tiddler.bag)
                 tiddler_revision.revision = revision_id
                 tiddler_revision = source.get(tiddler_revision)
-                print "putting tiddler %s:%s in bag %s" % (tiddler_revision.title.encode('utf-8'), tiddler_revision.revision, tiddler_revision.bag.encode('utf-8'))
+                print "putting tiddler %s:%s in bag %s" % (
+                        tiddler_revision.title.encode('utf-8'),
+                        tiddler_revision.revision,
+                        tiddler_revision.bag.encode('utf-8'))
                 tiddler_revision.revision = None
                 target.put(tiddler_revision)
-
-
-def init(config_in):
-    global config
-    config = config_in
