@@ -58,12 +58,19 @@ def init(config):
         target_store = Store(config['target_store'][0],
                 config['target_store'][1], target_environ)
 
-        if args:
-            migrate_bags(source_store, target_store, bags=args)
-        else:
-            migrate_users(source_store, target_store)
-            migrate_recipes(source_store, target_store)
-            migrate_bags(source_store, target_store)
+        migrate_entities(source_store, target_store, args)
+
+
+def migrate_entities(source_store, target_store, args=None):
+    """
+    Perform migration of entities.
+    """
+    if args:
+        migrate_bags(source_store, target_store, bags=args)
+    else:
+        migrate_users(source_store, target_store)
+        migrate_recipes(source_store, target_store)
+        migrate_bags(source_store, target_store)
 
 
 def migrate_recipes(source, target):
